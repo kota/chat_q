@@ -97,5 +97,5 @@ q.read_problems
 
 while true
   q.start
-  sleep 600
+  sleep 300
 end
