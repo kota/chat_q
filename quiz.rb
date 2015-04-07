@@ -1,5 +1,6 @@
 require './chatwork_api'
 require 'nkf'
+require 'json'
 
 class Problem
   attr_accessor :text, :answer
@@ -28,6 +29,7 @@ class Quiz
   def initialize
     @chatwork = ChatworkAPI.new
     read_problems
+    read_scores
   end
 
   def read_problems
@@ -38,6 +40,16 @@ class Quiz
       csv = l.split(',')
       Problem.new(csv[1],csv[2])
     end
+  end
+
+  def read_scores
+    unless File.exist?('./score.txt')
+      File.open('./score.txt','w') { |f| f.write("{}") }
+    end
+    json_str = File.open('./score.txt','r') do |f|
+      f.read
+    end
+    @scores = JSON.parse(json_str)
   end
 
   def start
@@ -59,7 +71,9 @@ class Quiz
           if answers
             answers.each do |answer|
               if problem.is_answer_correct(answer['body'])
-                puts_chatwork "#{answer['account']['name']}さん。正解です"
+                name = answer['account']['name']
+                increment_score(name)
+                puts_name_and_score(name)
                 @finished = true
                 break
               end
@@ -89,6 +103,23 @@ class Quiz
 
   def get_lines_chatwork
     @chatwork.get_messages("28293593")
+  end
+
+  def puts_name_and_score(name)
+    str = "#{name}さん。正解です"
+    str += "\n\nこれまでの成績\n"
+    @scores.each do |name,score|
+      str += "#{name}:#{score}点\n"
+    end
+    puts_chatwork(str)
+  end
+
+  def increment_score(name)
+    @scores[name] ||= 0
+    @scores[name] += 1
+    File.open('./score.txt','w') do |f|
+      f.write(@scores.to_json)
+    end
   end
 end
 
