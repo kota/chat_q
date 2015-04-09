@@ -38,7 +38,7 @@ class Quiz
     end
     @problems = lines.map do |l|
       csv = l.split(',')
-      Problem.new(csv[1],csv[2])
+      Problem.new(csv[0],csv[1])
     end
   end
 
@@ -128,5 +128,5 @@ q.read_problems
 
 while true
   q.start
-  sleep 300
+  sleep 480
 end
